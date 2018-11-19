@@ -12,9 +12,9 @@
 namespace{
   const char * AP_NAME = "Heybox Access Point"; // Assigns your Access Point name
   const char * MQTT_SERVER = "io.adafruit.com"; 
-  const char * TOKEN = "4f50c525fc714b0593734ac7582c63ed"; // Assigns your Ubidots TOKEN
-  const char * USERNAME = "gumakerhub";
-  const char * FEEDNAME = "makerhubevents.backdoorbell";
+  const char * TOKEN = ""; // Assigns your Ubidots TOKEN
+  const char * USERNAME = "";
+  const char * FEEDNAME = "";
   int PIN_RESET = 4;
   int LED = LED_BUILTIN;
   int SENSOR = A0;
