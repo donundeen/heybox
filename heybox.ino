@@ -12,15 +12,18 @@
 namespace{
   const char * AP_NAME = "Heybox Access Point"; // Assigns your Access Point name
   const char * MQTT_SERVER = "io.adafruit.com"; 
-  const char * TOKEN = ""; // Assigns your Ubidots TOKEN
-  const char * USERNAME = "";
-  const char * FEEDNAME = "";
-  int PIN_RESET = 4;
+  const char * TOKEN = ""; // Assigns your adafruit TOKEN
+//  const char * USERNAME = "gumakerhub";
+//  const char * FEEDNAME = "makerhubevents.backdoorbell";
+  const char * USERNAME = "donundeen";
+  const char * FEEDNAME_TO = "heybox-todon";
+  const char * FEEDNAME_FROM = "heybox-toliz";
   int LED = LED_BUILTIN;
-  int SENSOR = A0;
+  int BUTTONPIN = 13;
 }
 
-char topic[150];
+char topic_to[150];
+char topic_from[150];
 char payload[50];
 String clientMac = "";
 unsigned char mac[6];
@@ -44,36 +47,46 @@ ConfigManager configManager;
  ****************************************/
 
 void callback(char* topic, byte* payload, unsigned int length){
-  
+  String input = String((char *)payload).substring(0, length);
+
+/*
+  Serial.println("got message");
+  Serial.println(topic);
+  Serial.println(length);
+  Serial.println(input);
+  */
+  if(input == "ON"){
+    digitalWrite(LED, LOW);
+  }else{
+    digitalWrite(LED, HIGH);    
+  }
 }
 
 void reconnect() {
   
   while (!client.connected()) {
-    configManager.loop();    
-    
+//    configManager.loop();    
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     Serial.println(clientMac.c_str());
 //    if (client.connect(clientMac.c_str(), TOKEN, NULL)) {
     if (client.connect(clientMac.c_str(), USERNAME, TOKEN)) {
       Serial.println("connected");
+      client.subscribe(topic_from);      
       break;
-      } else {
+    } else {
 //        configManager.reset();
-        Serial.print("failed, rc=");
-        Serial.print(client.state());
-        Serial.println(" try again in 3 seconds");
-        for(uint8_t Blink=0; Blink<=3; Blink++){
-          digitalWrite(LED_BUILTIN, LOW);
-          delay(500);
-          digitalWrite(LED_BUILTIN, HIGH);
-          delay(500);
-        }
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 3 seconds");
+      for(uint8_t Blink=0; Blink<=3; Blink++){
+        digitalWrite(LED, LOW);
+        delay(500);
+        digitalWrite(LED, HIGH);
+        delay(500);
       }
+    }
   }
-  
-  
 }
 
 String macToStr(const uint8_t* mac) {
@@ -92,10 +105,10 @@ String macToStr(const uint8_t* mac) {
 void setup() {
   Serial.begin(115200);
   /* Declare PINs as input/outpu */
-  pinMode(SENSOR, INPUT);
-  pinMode(PIN_RESET, INPUT);
+  pinMode(BUTTONPIN, INPUT_PULLUP);
   pinMode(LED, OUTPUT);
-
+  digitalWrite(LED, HIGH);
+  
   /* Assign WiFi MAC address as MQTT client name */
   WiFi.macAddress(mac);
   clientMac += macToStr(mac);
@@ -113,28 +126,54 @@ void setup() {
   client.setCallback(callback);
   
   /* Build the topic request */
-  sprintf(topic, "%s/f/%s", USERNAME, FEEDNAME);
+  sprintf(topic_to, "%s/f/%s", USERNAME, FEEDNAME_TO);
+  sprintf(topic_from, "%s/f/%s", USERNAME, FEEDNAME_FROM);
 }
 
+
+
+
+int prevVal = 0;
 void loop() {  
-//  configManager.reset();
   configManager.loop();    
   
   /* MQTT client reconnection */
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.println("not on wifi");
+    Serial.println(WL_CONNECTED);
+    Serial.println(WiFi.status());
+    delay(500);
+    return;    
+  }else{
+
+  }
   
   if (!client.connected()) {
     Serial.println("not connected, recon");
       reconnect();
   }
+
+  int button = digitalRead(BUTTONPIN);
+  if(button == 0){
+    button = 1;
+  }else{
+    button = 0;  
+  }
+  Serial.println(button);
+
+  if(button != prevVal){
+    // new value;
+    Serial.println("sending");
+    Serial.println(button);
+    if(button == 0){
+      client.publish(topic_to, "OFF"); // turn it off for now...       
+    }else{
+      client.publish(topic_to, "ON"); // turn it off for now...       
+    }
+  }
+  prevVal = button;
   
-  /* Sensor Reading */
-//  int value = analogRead(SENSOR);
-  /* Build the payload request */
-//  sprintf(payload, "{\"%s\": %d}", VARIABLE_LABEL, value);
-  /* Publish sensor value to Ubidots */ 
-  //client.publish(topic, payload);
-//  client.publish(topic, "1"); // turn it off for now...
   client.loop();
-  delay(5000);
+  delay(200);
   
 }
