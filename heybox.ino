@@ -12,14 +12,16 @@
 namespace{
   const char * AP_NAME = "Heybox Access Point"; // Assigns your Access Point name
   const char * MQTT_SERVER = "io.adafruit.com"; 
-  const char * TOKEN = ""; // Assigns your adafruit TOKEN
+  const char * TOKEN = "b20aea6d2bdc41beba537705083e094b"; // Assigns your adafruit TOKEN
 //  const char * USERNAME = "gumakerhub";
 //  const char * FEEDNAME = "makerhubevents.backdoorbell";
   const char * USERNAME = "donundeen";
   const char * FEEDNAME_TO = "heybox-todon";
   const char * FEEDNAME_FROM = "heybox-toliz";
-  int LED = LED_BUILTIN;
-  int BUTTONPIN = 13;
+//  int LED = LED_BUILTIN;
+//  int BUTTONPIN = 13;
+  int LED = 16;
+  int BUTTONPIN = 2;
 }
 
 char topic_to[150];
